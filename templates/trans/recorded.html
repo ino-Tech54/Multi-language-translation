@@ -1,0 +1,354 @@
+{% extends "trans/base.html" %}
+
+{% block content %}
+<div class="container" style="background-color: #0d1b2a; color: #e0e1dd; min-height: 100vh; padding: 20px;">
+    <h2 class="mb-4" style="color: #778da9; font-weight: 700; text-align: center;">
+        Upload Audio/Video for Translation
+    </h2>
+
+    <!-- Flash Messages -->
+    <div id="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}" style="background-color: {% if category == 'success' %}#28a745{% else %}#dc3545{% endif %}; color: white; border-radius: 5px; padding: 10px; text-align: center; font-weight: 600; margin-bottom: 10px;">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Upload Form -->
+    <div class="card mb-5" style="background-color: #1b263b; border: 1px solid #415a77; border-radius: 10px;">
+        <div class="card-body p-4">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{{ url_for('trans.recorded_translation') }}">
+                <div class="form-group mb-4">
+                    <label for="fileInput" style="font-weight: 600;">Choose File:</label>
+                    <input type="file" class="form-control" name="file" id="fileInput" required
+                           accept=".mp3,.wav,.mp4"
+                           style="background-color: #415a77; color: #e0e1dd; border: 1px solid #778da9;">
+                    <small id="fileError" style="color: #ff6b6b; display: none; font-weight: 500;">
+                        Only audio (.mp3, .wav) or video (.mp4) files are allowed. Max size: 50MB.
+                    </small>
+                    <small id="fileSize" style="color: #778da9; display: none; font-weight: 500;"></small>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label for="language" style="font-weight: 600;">Target Language:</label>
+                    <select name="language" class="form-control" id="targetLanguage" required
+                            style="background-color: #415a77; color: #e0e1dd; border: 1px solid #778da9;">
+                        <option value="shona">Shona</option>
+                        <option value="ndebele">Ndebele</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn w-100" id="uploadBtn"
+                        style="background-color: #778da9; color: #0d1b2a; font-weight: 600; border: none; padding: 10px;">
+                    Upload & Translate
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Processing Results (shown after upload) -->
+    {% if uploaded_file %}
+    <div class="card mb-4" style="background-color: #1b263b; border: 1px solid #415a77; border-radius: 10px;">
+        <div class="card-body p-4">
+            <h3 class="mb-3" style="color: #778da9; font-weight: 700;">Translation Results</h3>
+            
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <strong>File:</strong> {{ uploaded_file }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Language:</strong> {{ selected_language|title }}
+                </div>
+            </div>
+            
+            {% if processing_time %}
+            <div class="row mb-3">
+                <div class="col-md-12">
+                    <strong>Processing Time:</strong> {{ "%.1f"|format(processing_time) }} seconds
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Original Text:</label>
+                        <textarea class="form-control" rows="4" readonly
+                                style="background-color: #415a77; color: #e0e1dd; border: 1px solid #778da9;">{{ extracted_text or '' }}</textarea>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label style="font-weight: 600;">Translated Text ({{ selected_language|title }}):</label>
+                        <textarea class="form-control" rows="4" readonly
+                                style="background-color: #415a77; color: #e0e1dd; border: 1px solid #778da9;">{{ translated_text or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Uploaded Files Table -->
+    <div class="card" style="background-color: #1b263b; border: 1px solid #415a77; border-radius: 10px;">
+        <div class="card-body p-4">
+            <h3 class="mb-4" style="color: #778da9; font-weight: 700;">Your Uploaded Files</h3>
+
+            {% if files %}
+            <div class="table-responsive">
+                <table class="table" id="filesTable" style="color: #e0e1dd; border-color: #415a77;">
+                    <thead style="background-color: #415a77;">
+                        <tr>
+                            <th>Filename</th>
+                            <th>Type</th>
+                            <th>Preview</th>
+                            <th>Uploaded</th>
+                            <th>Original Text</th>
+                            <th>Translated Text</th>
+                            <th>Language</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in files %}
+                        {% set translation = file.translations|first if file.translations else None %}
+                        <tr style="background-color: #0d1b2a;">
+                            <td>{{ file.filename }}</td>
+                            <td>
+                                <span class="badge" style="background-color: #415a77; color: #e0e1dd;">
+                                    {{ file.file_type|upper }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if file.file_type in ['mp3', 'wav'] %}
+                                    <audio controls style="width: 180px; height: 40px;">
+                                        <source src="{{ url_for('static', filename='uploads/' ~ file.filename) }}" type="audio/{{ file.file_type }}">
+                                        Your browser does not support the audio element.
+                                    </audio>
+                                {% elif file.file_type == 'mp4' %}
+                                    <video controls width="180" height="100">
+                                        <source src="{{ url_for('static', filename='uploads/' ~ file.filename) }}" type="video/mp4">
+                                        Your browser does not support the video element.
+                                    </video>
+                                {% else %}
+                                    <span class="text-muted">No preview</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ file.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if translation %}
+                                    <span class="original-text" title="{{ translation.english_sentence }}">
+                                        {{ translation.english_sentence[:50] }}{% if translation.english_sentence|length > 50 %}...{% endif %}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Not translated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if translation %}
+                                    {% if selected_language == 'shona' or translation.shona_translation %}
+                                        <span class="translated-text" title="{{ translation.shona_translation }}">
+                                            {{ translation.shona_translation[:50] }}{% if translation.shona_translation|length > 50 %}...{% endif %}
+                                        </span>
+                                    {% elif selected_language == 'ndebele' or translation.ndebele_translation %}
+                                        <span class="translated-text" title="{{ translation.ndebele_translation }}">
+                                            {{ translation.ndebele_translation[:50] }}{% if translation.ndebele_translation|length > 50 %}...{% endif %}
+                                        </span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Not translated</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if translation %}
+                                    <span class="badge" style="background-color: #778da9; color: #0d1b2a;">
+                                        {{ selected_language|title if selected_language else 'Multiple' }}
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4" style="color: #778da9;">
+                <p>No files uploaded yet. Upload your first audio or video file to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Translations -->
+    {% if translations %}
+    <div class="card mt-4" style="background-color: #1b263b; border: 1px solid #415a77; border-radius: 10px;">
+        <div class="card-body p-4">
+            <h3 class="mb-4" style="color: #778da9; font-weight: 700;">Recent Translations</h3>
+            <div class="table-responsive">
+                <table class="table" style="color: #e0e1dd; border-color: #415a77;">
+                    <thead style="background-color: #415a77;">
+                        <tr>
+                            <th>Original Text</th>
+                            <th>Translated Text</th>
+                            <th>Language</th>
+                            <th>Time Taken</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for trans in translations %}
+                        <tr style="background-color: #0d1b2a;">
+                            <td>
+                                <span title="{{ trans.original_text }}">
+                                    {{ trans.original_text[:70] }}{% if trans.original_text|length > 70 %}...{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span title="{{ trans.translated_text }}">
+                                    {{ trans.translated_text[:70] }}{% if trans.translated_text|length > 70 %}...{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge" style="background-color: #778da9; color: #0d1b2a;">
+                                    {{ trans.selected_language|title }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if trans.time_taken %}
+                                    {{ "%.2f"|format(trans.time_taken) }}s
+                                {% else %}
+                                    <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ trans.start_time.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadForm = document.getElementById('uploadForm');
+    const fileInput = document.getElementById('fileInput');
+    const flashContainer = document.getElementById('flash-messages');
+    const uploadBtn = document.getElementById('uploadBtn');
+
+    // File validation
+    fileInput.addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        const errorMsg = document.getElementById('fileError');
+        const sizeMsg = document.getElementById('fileSize');
+        
+        if (file) {
+            const validExtensions = ['mp3', 'wav', 'mp4'];
+            const fileExt = file.name.split('.').pop().toLowerCase();
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            
+            // Show file size
+            sizeMsg.textContent = `File size: ${fileSizeMB} MB`;
+            sizeMsg.style.display = 'block';
+            
+            // Validate extension
+            if (!validExtensions.includes(fileExt)) {
+                errorMsg.style.display = 'block';
+                uploadBtn.disabled = true;
+            } else {
+                errorMsg.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+            
+            // Validate size (50MB limit)
+            if (file.size > 50 * 1024 * 1024) {
+                errorMsg.textContent = 'File size too large. Maximum 50MB allowed.';
+                errorMsg.style.display = 'block';
+                uploadBtn.disabled = true;
+            }
+        } else {
+            sizeMsg.style.display = 'none';
+        }
+    });
+
+    // Form submission feedback
+    uploadForm.addEventListener('submit', function() {
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+        
+        // Show processing message
+        const processingMsg = document.createElement('div');
+        processingMsg.className = 'alert alert-info';
+        processingMsg.style.cssText = 'background-color: #17a2b8; color: white; border-radius: 5px; padding: 10px; text-align: center; font-weight: 600; margin-bottom: 10px;';
+        processingMsg.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing your file. This may take a few moments...';
+        flashContainer.appendChild(processingMsg);
+    });
+
+    // Auto-hide flash messages after 5 seconds
+    const flashMessages = document.querySelectorAll('.alert');
+    flashMessages.forEach(message => {
+        setTimeout(() => {
+            message.style.opacity = '0';
+            message.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => message.remove(), 500);
+        }, 5000);
+    });
+
+    // Add hover effects to text areas for better readability
+    const textAreas = document.querySelectorAll('textarea');
+    textAreas.forEach(textarea => {
+        textarea.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = '#4a638a';
+        });
+        textarea.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '#415a77';
+        });
+    });
+});
+</script>
+
+<style>
+    .form-control:focus {
+        background-color: #415a77;
+        color: #e0e1dd;
+        border-color: #778da9;
+        box-shadow: 0 0 0 0.2rem rgba(119, 141, 169, 0.25);
+    }
+    
+    .btn:hover:not(:disabled) {
+        background-color: #9bb1d6 !important;
+        transform: translateY(-2px);
+        transition: all 0.3s ease;
+    }
+    
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .badge {
+        font-size: 0.75em;
+        padding: 0.25em 0.6em;
+    }
+    
+    .original-text, .translated-text {
+        cursor: help;
+    }
+    
+    audio, video {
+        border-radius: 5px;
+        background-color: #0d1b2a;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #1b263b !important;
+        transition: background-color 0.3s ease;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,204 @@
+{% extends "admin/base.html" %}
+{% block content %}
+
+<style>
+    
+    .history-container {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        color: #333;
+        background-color: #e8f5e9;
+        padding: 2rem;
+    }
+
+    .history-table {
+        width: 100%;
+        border-collapse: collapse;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+        background-color: #ffffff;
+    }
+
+    .history-table thead th {
+        background-color: #a5d6a7;
+        color: #ffffff;
+        padding: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 0.5px;
+        border: 1px solid #81c784;
+    }
+
+    .history-table tbody tr {
+        transition: all 0.2s ease;
+    }
+
+    .history-table tbody tr:hover {
+        background-color: #f1f8e9;
+    }
+
+    .history-table td {
+        padding: 1rem;
+        vertical-align: middle;
+        border: 1px solid #c8e6c9;
+    }
+
+    .anomaly-row {
+        background-color: rgb(236, 247, 242);
+    }
+
+    .normal-row {
+        background-color: #ffffff;
+    }
+
+    .zesa-id {
+        font-family: monospace;
+        font-weight: 600;
+    }
+
+    .datetime {
+        white-space: nowrap;
+    }
+
+    .consumption,
+    .voltage,
+    .meter {
+        text-align: right;
+        font-family: monospace;
+    }
+
+    .customer-type {
+        text-transform: capitalize;
+    }
+
+    .anomaly-type .badge {
+        padding: 0.35em 0.65em;
+        font-size: 0.75em;
+        font-weight: 600;
+    }
+
+    .confidence .progress {
+        height: 20px;
+        border-radius: 4px;
+        background-color: #e9ecef;
+    }
+
+    .confidence .progress-bar {
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    @media (max-width: 992px) {
+        .table-responsive {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .history-table {
+            min-width: 992px;
+        }
+    }
+
+    
+    .search-container {
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .search-input {
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 0.25rem;
+        width: 200px;
+        font-size: 1rem;
+    }
+
+    .search-button,
+    .clear-button {
+        padding: 0.75rem 1.25rem;
+        border: none;
+        border-radius: 0.25rem;
+        color: white;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        text-decoration: none; 
+        display: inline-block; 
+    }
+
+    .search-button {
+        background-color: #28a745;
+    }
+
+    .clear-button {
+        background-color:rgb(96, 218, 161);
+        margin-left: 0.5rem;
+    }
+
+    .search-button:hover {
+        background-color: #218838;
+    }
+
+    .clear-button:hover {
+        background-color:rgb(105, 221, 173);
+    }
+</style>
+
+<div class="history-container">
+    <h2>Search Results for ZESA ID: {{ zesa_id }}</h2>
+
+    <div class="table-responsive">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>ZESA ID</th>
+                    <th>Date</th>
+                    <th>Current (kWh)</th>
+                    <th>Daily (kWh)</th>
+                    <th>Weekly (kWh)</th>
+                    <th>Voltage (V)</th>
+                    <th>Meter (kWh)</th>
+                    <th>Customer Type</th>
+                    <th>Anomaly</th>
+                    <th>Confidence</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in search_results %}
+                <tr class="{% if record.anomaly_type != 'None' %}anomaly-row{% else %}normal-row{% endif %}">
+                    <td class="zesa-id">{{ record.zesa_id }}</td>
+                    <td class="datetime">{{ record.timestamp }}</td>
+                    <td class="consumption">{{ "%.2f"|format(record.current_consumption) }}</td>
+                    <td class="consumption">{{ "%.2f"|format(record.daily_consumption) }}</td>
+                    <td class="consumption">{{ "%.2f"|format(record.weekly_consumption) }}</td>
+                    <td class="voltage">{{ "%.1f"|format(record.voltage) }}</td>
+                    <td class="meter">{{ "%.2f"|format(record.meter_reading) }}</td>
+                    <td class="customer-type">{{ record.customer_type }}</td>
+                    <td class="anomaly-type">
+                        <span
+                            class="badge {% if record.anomaly_type == 'None' %}badge-success{% else %}badge-danger{% endif %}">
+                            {{ record.anomaly_type }}
+                        </span>
+                    </td>
+                    <td class="confidence">
+                        <div class="progress">
+                            <div class="progress-bar {% if record.anomaly_type == 'None' %}bg-success{% else %}bg-danger{% endif %}"
+                                role="progressbar" style="width: {{ record.confidence }}%"
+                                aria-valuenow="{{ record.confidence }}" aria-valuemin="0" aria-valuemax="100">
+                                {{ "%.1f"|format(record.confidence) }}%
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('detection_history') }}" class="clear-button">Back to History</a>
+</div>
+
+{% endblock %}

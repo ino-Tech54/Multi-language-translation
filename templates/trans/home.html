@@ -1,0 +1,339 @@
+{% extends "trans/base.html" %}
+{% block content %}
+<style>
+    .dashboard-container {
+        background: url('{{ url_for("static", filename="images/art.jpeg") }}') no-repeat center center fixed;
+        background-size: cover;
+        min-height: calc(100vh - 4rem);
+        padding: 2rem 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .glass-card {
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background: rgba(13, 36, 56, 0.95);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        padding: 3rem 2rem;
+        max-width: 1000px;
+        width: 100%;
+    }
+    
+    .welcome-section {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .welcome-title {
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #64B5F6, #1976D2);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .welcome-name {
+        color: #4FC3F7;
+        font-weight: 600;
+    }
+    
+    .welcome-subtitle {
+        color: #B0BEC5;
+        font-size: 1.2rem;
+        margin-bottom: 0;
+        line-height: 1.6;
+    }
+    
+    .nav-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+    
+    .nav-card {
+        background: linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(13, 71, 161, 0.2));
+        border-radius: 16px;
+        padding: 2.5rem 2rem;
+        text-decoration: none;
+        color: #E3F2FD;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .nav-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .nav-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(25, 118, 210, 0.3);
+        border-color: rgba(100, 181, 246, 0.3);
+    }
+    
+    .nav-card:hover::before {
+        left: 100%;
+    }
+    
+    .nav-card:hover .card-icon {
+        transform: scale(1.1);
+        color: #4FC3F7;
+    }
+    
+    .card-icon {
+        font-size: 3rem;
+        margin-bottom: 1.5rem;
+        display: block;
+        transition: all 0.3s ease;
+        color: #64B5F6;
+    }
+    
+    .card-title {
+        font-size: 1.4rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: #FFFFFF;
+    }
+    
+    .card-description {
+        color: #B0BEC5;
+        font-size: 1rem;
+        line-height: 1.6;
+        margin: 0;
+    }
+    
+    .card-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, #1976D2, #0D47A1);
+        color: white;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    /* Feature highlights */
+    .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .feature-item {
+        text-align: center;
+        color: #E3F2FD;
+    }
+    
+    .feature-icon {
+        font-size: 2rem;
+        color: #4FC3F7;
+        margin-bottom: 0.5rem;
+    }
+    
+    .feature-text {
+        font-size: 0.9rem;
+        color: #B0BEC5;
+        margin: 0;
+    }
+    
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+        .dashboard-container {
+            padding: 1rem 0.5rem;
+        }
+        
+        .glass-card {
+            padding: 2rem 1.5rem;
+        }
+        
+        .welcome-title {
+            font-size: 2rem;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.1rem;
+        }
+        
+        .nav-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .nav-card {
+            padding: 2rem 1.5rem;
+        }
+        
+        .features-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .welcome-title {
+            font-size: 1.8rem;
+        }
+        
+        .card-icon {
+            font-size: 2.5rem;
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+        }
+        
+        .features-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    /* Animation for page load */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .glass-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .nav-card {
+        animation: fadeInUp 0.6s ease-out;
+    }
+    
+    .nav-card:nth-child(1) { animation-delay: 0.1s; }
+    .nav-card:nth-child(2) { animation-delay: 0.2s; }
+    .nav-card:nth-child(3) { animation-delay: 0.3s; }
+</style>
+
+<div class="dashboard-container">
+    <div class="glass-card">
+        <!-- Welcome Section -->
+        <div class="welcome-section">
+            <h1 class="welcome-title">
+                Welcome, <span class="welcome-name">{{ user.name }}</span> 
+            </h1>
+            <p class="welcome-subtitle">
+                Experience real-time language translation for videos and audio.<br>
+                Choose an option below to get started with our advanced translation services.
+            </p>
+        </div>
+
+        <!-- Navigation Grid -->
+        <div class="nav-grid">
+            <a href="{{ url_for('trans.recorded_translation') }}" class="nav-card">
+                <span class="card-badge">Popular</span>
+                <i class="fas fa-cloud-upload-alt card-icon"></i>
+                <h3 class="card-title">Upload & Translate</h3>
+                <p class="card-description">
+                    Translate pre-recorded audio or video files instantly with  AI processing.
+                </p>
+            </a>
+
+            <a href="{{ url_for('trans.video_translation') }}" class="nav-card">
+                <span class="card-badge">Live</span>
+                <i class="fas fa-broadcast-tower card-icon"></i>
+                <h3 class="card-title">Live Translation</h3>
+                <p class="card-description">
+                    Translate live audio streams in real-time with minimal latency and high accuracy.
+                </p>
+            </a>
+
+            <a href="{{ url_for('trans.reports') }}" class="nav-card">
+                <i class="fas fa-chart-line card-icon"></i>
+                <h3 class="card-title">Reports & Analytics</h3>
+                <p class="card-description">
+                    View your translation history, processing times and detailed usage analytics.
+                </p>
+            </a>
+        </div>
+
+        <!-- Features Section -->
+        <div class="features-grid">
+            <div class="feature-item">
+                <i class="fas fa-bolt feature-icon"></i>
+                <p class="feature-text">Fast Processing</p>
+            </div>
+            
+            <div class="feature-item">
+                <i class="fas fa-language feature-icon"></i>
+                <p class="feature-text">Multiple Languages</p>
+            </div>
+            <div class="feature-item">
+                <i class="fas fa-database feature-icon"></i>
+                <p class="feature-text">Translation History</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Add interactive animations
+    document.addEventListener('DOMContentLoaded', function() {
+        const cards = document.querySelectorAll('.nav-card');
+        
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-8px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+        
+        // Add typing effect for welcome message
+        const welcomeText = "Experience real-time language translation for videos and audio.";
+        const subtitleElement = document.querySelector('.welcome-subtitle');
+        let i = 0;
+        
+        function typeWriter() {
+            if (i < welcomeText.length) {
+                subtitleElement.innerHTML = welcomeText.substring(0, i + 1) + '<span style="border-right: 2px solid #4FC3F7; animation: blink 1s infinite;"></span>';
+                i++;
+                setTimeout(typeWriter, 50);
+            } else {
+                subtitleElement.innerHTML = welcomeText;
+            }
+        }
+        
+        // Start typing effect after a delay
+        setTimeout(typeWriter, 1000);
+    });
+</script>
+
+<style>
+    @keyframes blink {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0; }
+    }
+</style>
+{% endblock %}

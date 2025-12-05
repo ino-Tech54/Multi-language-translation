@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2E7D32;
+            --lightprimary: #4CAF50;
+            --lighterprimary: #E8F5E9;
+            --accent: #81C784;
+            --textdark: #1B5E20;
+            --textlight: #FFFFFF;
+            --sidebar-bg: #E8F5E9;
+            --sidebar-hover: #C8E6C9;
+            --header-bg: #4CAF50;
+            --sos-color: #F44336;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: var(--textdark);
+            background: #F1F8E9;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        header {
+            background: var(--header-bg);
+            color: var(--textlight);
+            padding: 0 20px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .user-welcome {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .toggle-sidebar {
+            background: none;
+            border: none;
+            color: var(--textlight);
+            font-size: 22px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .top-nav-item {
+            color: var(--textlight);
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px 15px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(46, 125, 50, 0.7);
+        }
+
+        .top-nav-item:hover {
+            background-color: rgba(46, 125, 50, 0.9);
+        }
+
+        .top-nav-item i {
+            font-size: 16px;
+        }
+
+        /* SOS Button in Top Nav */
+        .sos-nav-item {
+            background-color: var(--sos-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .sos-nav-item:hover {
+            background-color: #D32F2F;
+        }
+
+        /* Sidebar Styles */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            padding: 20px 0;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            top: 0;
+            left: 0;
+            z-index: 999;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px 20px;
+            border-bottom: 1px solid #C8E6C9;
+            margin-bottom: 15px;
+        }
+
+        .close-sidebar {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: var(--textdark);
+            cursor: pointer;
+        }
+
+        .sidebar-item {
+            padding: 15px 25px;
+            cursor: pointer;
+            margin: 6px 15px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: var(--textdark);
+        }
+
+        .sidebar-item:hover {
+            background-color: var(--sidebar-hover);
+        }
+
+        .sidebar-item.active {
+            background-color: var(--lightprimary);
+            color: white;
+        }
+
+        .sidebar-item i {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .container {
+            padding-top: 70px;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        /* Alert Messages */
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .alert-error {
+            background-color: #FECACA;
+            color: #7F1D1D;
+        }
+
+        .alert-success {
+            background-color: #BBF7D0;
+            color: #166534;
+        }
+
+        /* Logout Overlay */
+        .logout-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            display: none;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--accent);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .logout-message {
+            color: white;
+            margin-top: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        /* Mobile Responsiveness */
+        @media (min-width: 769px) {
+            .sidebar {
+                transform: translateX(0);
+                width: 260px;
+            }
+            
+            .main-content {
+                margin-left: 260px;
+            }
+            
+            .sidebar-overlay {
+                display: none !important;
+            }
+            
+            .close-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 0 15px;
+                height: 60px;
+            }
+            
+            .user-welcome {
+                font-size: 16px;
+            }
+            
+            .top-nav-item, .sos-nav-item {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .header-logo {
+                width: 36px;
+                height: 36px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 0 10px;
+            }
+            
+            .header-right {
+                gap: 8px;
+            }
+            
+            .top-nav-item, .sos-nav-item {
+                padding: 6px 10px;
+                font-size: 0;
+            }
+            
+            .top-nav-item i, .sos-nav-item i {
+                font-size: 16px;
+                margin: 0;
+            }
+            
+            .user-welcome {
+                font-size: 14px;
+            }
+            
+            .main-content {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-overlay" id="logoutOverlay">
+        <div style="text-align: center;">
+            <div class="spinner"></div>
+            <div class="logout-message">Processing...</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <button class="toggle-sidebar" id="toggleSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="header-logo">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="user-welcome">{{ current_user.name }}</div>
+        </div>
+
+        <div class="header-right">
+            <div class="sos-nav-item {% if request.endpoint == 'customer.notifications' %}active{% endif %}" 
+                onclick="location.href='{{ url_for('customer.notifications') }}'">
+                <i class="fas fa-bell"></i> <span class="nav-text"> Alerts</span>
+            </div>
+            
+            <div class="top-nav-item" onclick="showLogoutSpinner()">
+                <i class="fas fa-lock"></i> <span class="nav-text">Logout</span>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Menu</h3>
+            <button class="close-sidebar" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-item {% if request.endpoint == 'customer.customer_dashboard' %}active{% endif %}"
+             onclick="location.href='{{ url_for('customer.customer_dashboard') }}'">
+            <i class="fas fa-clock"></i> Dashboard
+        </div>
+
+        <div class="sidebar-item {% if request.endpoint == 'customer.find_farmer' %}active{% endif %}"
+             onclick="location.href='{{ url_for('customer.find_farmer') }}'">
+            <i class="fas fa-bell"></i> Find Farmer
+        </div> 
+
+        <div class="sidebar-item {% if request.endpoint == 'customer.coummunity' %}active{% endif %}"
+             onclick="location.href='{{ url_for('customer.coummunity') }}'">
+            <i class="fas fa-tasks"></i> Community
+        </div>
+    </nav>
+
+    <div class="container">
+        <main class="main-content" id="mainContent">
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{% if category == 'error' %}error{% else %}success{% endif %}">
+                            {{ message }}
+                            <button type="button" class="ml-auto text-lg" onclick="this.parentElement.style.display='none'">
+                                &times;
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function showLogoutSpinner() {
+            const overlay = document.getElementById('logoutOverlay');
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                window.location.href = '{{ url_for("auth.logout") }}';
+            }, 1000);
+        }
+
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        toggleSidebarBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth < 769 && 
+                sidebar.classList.contains('active') && 
+                !sidebar.contains(event.target) && 
+                !toggleSidebarBtn.contains(event.target)) {
+                closeSidebar();
+            }
+        });
+
+        // Set active page based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            const topNavItems = document.querySelectorAll('.top-nav-item, .sos-nav-item');
+            
+            sidebarItems.forEach(item => {
+                const link = item.getAttribute('onclick');
+                if (link && link.includes(currentPath)) {
+                    item.classList.add('active');
+                }
+            });
+
+            topNavItems.forEach(item => {
+                const link = item.getAttribute('onclick');
+                if (link && link.includes(currentPath)) {
+                    item.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1040 @@
+{% extends "trans/base.html" %}
+
+{% block content %}
+<div class="translation-container">
+    
+    <div class="header-section">
+        <h1 class="main-title">Live Speech Translation</h1>
+        <p class="subtitle">Real-time speech recognition with instant translation</p>
+    </div>
+
+    <!-- Alert Section -->
+    <div class="alert-section">
+        <div class="alert-card warning" id="permission-alert">
+            <div class="alert-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"/>
+                </svg>
+            </div>
+            <div class="alert-content">
+                <h3>Permissions Required</h3>
+                <ul>
+                    <li>Camera access for video feed</li>
+                    <li>Microphone access for speech recognition</li>
+                    <li>Click "Allow" when browser prompts for permissions</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Debug Panel -->
+    <div class="debug-section">
+        <div class="section-header">
+            <h3>System Log</h3>
+            <button class="toggle-button" onclick="toggleDebug()">Hide</button>
+        </div>
+        <div id="debug-info" class="debug-content"></div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="content-grid">
+        <!-- Video Column -->
+        <div class="video-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Camera Feed</h3>
+                </div>
+                <div class="card-body">
+                    <video id="video" autoplay playsinline class="video-preview"></video>
+                    <div class="video-placeholder" id="video-placeholder">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M15 8v8H5V8h10m1-2H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4V7c0-.55-.45-1-1-1z"/>
+                        </svg>
+                        <p>Camera feed will appear here</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls Column -->
+        <div class="controls-column">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Configuration</h3>
+                </div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="camera-select" class="form-label">Camera Source</label>
+                        <select id="camera-select" class="form-select">
+                            <option value="">Loading cameras...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="language" class="form-label">Target Language</label>
+                        <select id="language" class="form-select">
+                            <option value="shona">Shona</option>
+                            <option value="ndebele">Ndebele</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button id="start-btn" class="btn btn-primary">
+                            <span class="btn-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/>
+                                </svg>
+                            </span>
+                            Start Translation
+                        </button>
+                        <button id="stop-btn" class="btn btn-secondary" disabled>
+                            <span class="btn-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M6 6h12v12H6z"/>
+                                </svg>
+                            </span>
+                            Stop
+                        </button>
+                        <button id="test-btn" class="btn btn-outline">
+                            <span class="btn-icon">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/>
+                                </svg>
+                            </span>
+                            Test API
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="results-grid">
+            <div class="result-card">
+                <div class="result-header">
+                    <h3>Speech Recognition</h3>
+                    <div class="status-indicator" id="speech-status">Waiting</div>
+                </div>
+                <div class="result-content">
+                    <p id="original-text" class="result-text">Waiting for speech input...</p>
+                    <div class="result-meta">
+                        <small>Speech-to-text output</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <div class="result-header">
+                    <h3>Translation Output</h3>
+                    <div class="status-indicator" id="translation-status">Ready</div>
+                </div>
+                <div class="result-content">
+                    <p id="translated-text" class="result-text">Translation will appear here</p>
+                    <div class="result-meta">
+                        <small id="translation-meta">When no translation is found, speech text will be shown</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-content">
+                <span class="status-label">System Status:</span>
+                <span id="status-text" class="status-message">Ready to start translation</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+:root {
+    --primary-color: #3b82f6;
+    --secondary-color: #6b7280;
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --error-color: #ef4444;
+    --info-color: #3b82f6;
+    --bg-color: #f8fafc;
+    --card-bg: #ffffff;
+    --border-color: #e2e8f0;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+}
+
+.translation-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Header Section */
+.header-section {
+    text-align: center;
+    margin-bottom: 32px;
+}
+
+.main-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 8px 0;
+}
+
+.subtitle {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+/* Alert Section */
+.alert-section {
+    margin-bottom: 24px;
+}
+
+.alert-card {
+    display: flex;
+    align-items: flex-start;
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid;
+}
+
+.alert-card.warning {
+    background-color: #fffbeb;
+    border-left-color: var(--warning-color);
+    color: #92400e;
+}
+
+.alert-icon {
+    margin-right: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.alert-content h3 {
+    margin: 0 0 8px 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.alert-content ul {
+    margin: 0;
+    padding-left: 16px;
+}
+
+.alert-content li {
+    margin-bottom: 4px;
+}
+
+/* Debug Section */
+.debug-section {
+    margin-bottom: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.toggle-button {
+    background: none;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 4px 12px;
+    font-size: 0.875rem;
+    cursor: pointer;
+}
+
+.debug-content {
+    padding: 16px;
+    background-color: var(--card-bg);
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+/* Content Grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Cards */
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.card-header {
+    padding: 16px 20px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.card-body {
+    padding: 20px;
+    position: relative;
+}
+
+/* Video */
+.video-preview {
+    width: 100%;
+    height: 300px;
+    background: #000;
+    border-radius: 8px;
+    object-fit: cover;
+    display: none;
+}
+
+.video-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 300px;
+    background: #f8fafc;
+    border: 2px dashed #e2e8f0;
+    border-radius: 8px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.video-placeholder svg {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.video-placeholder p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Form Styles */
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.form-select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background-color: var(--card-bg);
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+}
+
+/* Buttons */
+.button-group {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background-color: #4b5563;
+    transform: translateY(-1px);
+}
+
+.btn-outline {
+    background-color: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover:not(:disabled) {
+    background-color: var(--bg-color);
+    transform: translateY(-1px);
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+}
+
+/* Results Section */
+.results-section {
+    margin-bottom: 24px;
+}
+
+.results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 16px;
+}
+
+@media (max-width: 768px) {
+    .results-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.result-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.result-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    background-color: var(--bg-color);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.result-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.status-indicator {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.status-indicator.success {
+    background-color: var(--success-color);
+}
+
+.status-indicator.warning {
+    background-color: var(--warning-color);
+}
+
+.status-indicator.error {
+    background-color: var(--error-color);
+}
+
+.status-indicator.info {
+    background-color: var(--info-color);
+}
+
+.status-indicator.listening {
+    background-color: var(--primary-color);
+}
+
+.status-indicator.processing {
+    background-color: var(--warning-color);
+}
+
+.result-content {
+    padding: 20px;
+    min-height: 120px;
+}
+
+.result-text {
+    margin: 0;
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: var(--text-primary);
+    min-height: 60px;
+}
+
+.result-meta {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-color);
+}
+
+.result-meta small {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+/* Status Bar */
+.status-bar {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 12px 16px;
+}
+
+.status-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.status-message {
+    color: var(--text-secondary);
+}
+
+/* Utility Classes */
+.hidden {
+    display: none !important;
+}
+
+/* Scrollbar Styling */
+.debug-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.debug-content::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+.debug-content::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+.debug-content::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Loading states */
+.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Speech bubble style for original text */
+.speech-bubble {
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 12px 16px;
+    position: relative;
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 20px;
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 8px solid var(--border-color);
+}
+</style>
+
+<script>
+// Global variables
+let video = document.getElementById('video');
+let cameraSelect = document.getElementById('camera-select');
+let videoPlaceholder = document.getElementById('video-placeholder');
+let recognition;
+let isListening = false;
+let currentStream = null;
+
+// Debug logging
+function debugLog(message) {
+    const debugInfo = document.getElementById('debug-info');
+    const timestamp = new Date().toLocaleTimeString();
+    debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+    debugInfo.scrollTop = debugInfo.scrollHeight;
+}
+
+// Toggle debug panel
+function toggleDebug() {
+    const debugContent = document.getElementById('debug-info');
+    const toggleBtn = document.querySelector('.toggle-button');
+    if (debugContent.classList.contains('hidden')) {
+        debugContent.classList.remove('hidden');
+        toggleBtn.textContent = 'Hide';
+    } else {
+        debugContent.classList.add('hidden');
+        toggleBtn.textContent = 'Show';
+    }
+}
+
+// Update status
+function updateStatus(message, isError = false) {
+    const statusElement = document.getElementById('status-text');
+    statusElement.innerText = message;
+    statusElement.style.color = isError ? 'var(--error-color)' : 'var(--text-secondary)';
+}
+
+// Update button states
+function updateButtonStates(startDisabled, stopDisabled) {
+    document.getElementById('start-btn').disabled = startDisabled;
+    document.getElementById('stop-btn').disabled = stopDisabled;
+}
+
+// Update status indicators
+function updateStatusIndicators(speechStatus, translationStatus) {
+    const speechIndicator = document.getElementById('speech-status');
+    const translationIndicator = document.getElementById('translation-status');
+    
+    speechIndicator.textContent = speechStatus;
+    translationIndicator.textContent = translationStatus;
+    
+    // Remove all existing classes
+    speechIndicator.className = 'status-indicator';
+    translationIndicator.className = 'status-indicator';
+    
+    // Add appropriate class based on status
+    speechIndicator.classList.add(speechStatus.toLowerCase());
+    translationIndicator.classList.add(translationStatus.toLowerCase());
+}
+
+// Update translation meta info
+function updateTranslationMeta(message) {
+    document.getElementById('translation-meta').textContent = message;
+}
+
+// Display results with appropriate styling
+function displayTranslationResult(originalText, translatedText, isTranslated) {
+    const originalElement = document.getElementById('original-text');
+    const translatedElement = document.getElementById('translated-text');
+    
+    // Always show the original speech text
+    originalElement.textContent = originalText;
+    originalElement.style.color = 'var(--text-primary)';
+    
+    if (isTranslated && translatedText) {
+        // Show successful translation
+        translatedElement.textContent = translatedText;
+        translatedElement.style.color = 'var(--success-color)';
+        updateTranslationMeta('Translation found in database');
+        updateStatusIndicators('success', 'success');
+    } else {
+        // Show original text when no translation found
+        translatedElement.textContent = originalText;
+        translatedElement.style.color = 'var(--info-color)';
+        updateTranslationMeta('No translation found - showing speech text');
+        updateStatusIndicators('success', 'info');
+    }
+}
+
+// Populate cameras
+async function loadCameras() {
+    try {
+        // First, get permission for video to enumerate devices properly
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream.getTracks().forEach(track => track.stop()); // Stop immediately
+        
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoDevices = devices.filter(d => d.kind === 'videoinput');
+        
+        cameraSelect.innerHTML = '';
+        videoDevices.forEach((device, i) => {
+            let option = document.createElement('option');
+            option.value = device.deviceId;
+            option.text = device.label || `Camera ${i + 1}`;
+            cameraSelect.appendChild(option);
+        });
+        
+        debugLog(`Found ${videoDevices.length} cameras`);
+        
+        if (videoDevices.length > 0) {
+            cameraSelect.value = videoDevices[0].deviceId;
+        }
+    } catch (error) {
+        debugLog(`Camera enumeration error: ${error.message}`);
+        cameraSelect.innerHTML = '<option value="">No cameras found</option>';
+    }
+}
+
+// Start video stream
+async function startVideo() {
+    try {
+        debugLog("Starting camera...");
+        updateStatus("Starting camera...");
+        
+        // Stop any existing stream
+        if (currentStream) {
+            currentStream.getTracks().forEach(track => track.stop());
+        }
+        
+        const constraints = {
+            video: {
+                deviceId: cameraSelect.value ? { exact: cameraSelect.value } : undefined,
+                width: { ideal: 640 },
+                height: { ideal: 480 }
+            },
+            audio: false
+        };
+        
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        currentStream = stream;
+        video.srcObject = stream;
+        
+        // Show video and hide placeholder
+        video.style.display = 'block';
+        videoPlaceholder.style.display = 'none';
+        
+        debugLog("Camera started successfully");
+        updateStatus("Camera active");
+        return true;
+        
+    } catch (error) {
+        debugLog(`Camera error: ${error.name} - ${error.message}`);
+        updateStatus(`Camera error: ${error.message}`, true);
+        
+        // Show placeholder
+        video.style.display = 'none';
+        videoPlaceholder.style.display = 'flex';
+        videoPlaceholder.innerHTML = `
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15h2v2h-2v-2zm0-10h2v8h-2V7z"/>
+            </svg>
+            <p>Camera access denied<br><small>Please allow camera permissions</small></p>
+        `;
+        
+        return false;
+    }
+}
+
+// Request microphone permission
+async function requestMicrophonePermission() {
+    try {
+        debugLog("Requesting microphone permission...");
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                echoCancellation: true,
+                noiseSuppression: true,
+                autoGainControl: true
+            }, 
+            video: false 
+        });
+        // Stop the stream immediately since we just needed permission
+        stream.getTracks().forEach(track => track.stop());
+        debugLog("Microphone permission granted");
+        document.getElementById('permission-alert').style.display = 'none';
+        return true;
+    } catch (error) {
+        debugLog(`Microphone permission denied: ${error.name} - ${error.message}`);
+        updateStatus(`Microphone access denied: ${error.message}`, true);
+        return false;
+    }
+}
+
+// Start speech recognition
+async function startRecognition() {
+    if (!('webkitSpeechRecognition' in window)) {
+        const errorMsg = "Your browser does not support live speech recognition. Use Chrome on PC.";
+        alert(errorMsg);
+        debugLog(errorMsg);
+        return false;
+    }
+    
+    // Request microphone permission first
+    const hasPermission = await requestMicrophonePermission();
+    if (!hasPermission) {
+        return false;
+    }
+    
+    recognition = new webkitSpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    recognition.onstart = () => {
+        isListening = true;
+        debugLog("Speech recognition started - Speak now!");
+        updateStatus("Listening... Speak clearly");
+        updateButtonStates(true, false);
+        updateStatusIndicators("listening", "ready");
+        updateTranslationMeta("Listening for speech...");
+    };
+    
+    recognition.onresult = (event) => {
+        let finalTranscript = '';
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript;
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        // Show interim results
+        if (interimTranscript) {
+            document.getElementById('original-text').innerText = interimTranscript;
+            document.getElementById('original-text').style.color = 'var(--primary-color)';
+            updateStatus("Processing speech...");
+            updateStatusIndicators("processing", "ready");
+        }
+        
+        // Process final results
+        if (finalTranscript) {
+            const cleanText = finalTranscript.trim();
+            debugLog(`Speech detected: "${cleanText}"`);
+            updateStatus("Searching database...");
+            updateStatusIndicators("success", "searching");
+            
+            // Send to Flask to get translation
+            fetch("/trans/api/live-translate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    text: cleanText,
+                    language: document.getElementById("language").value
+                })
+            })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error(`HTTP error! status: ${res.status}`);
+                }
+                return res.json();
+            })
+            .then(data => {
+                debugLog(`API Response - Status: ${data.status}`);
+                
+                if (data.translation) {
+                    // Show successful translation
+                    displayTranslationResult(cleanText, data.translation, true);
+                    updateStatus(`Translation found!`);
+                    debugLog(`Database match: "${data.matched_phrase}" -> "${data.translation}"`);
+                } else {
+                    // Show original text when no translation found
+                    displayTranslationResult(cleanText, null, false);
+                    updateStatus("No translation found - showing speech text");
+                    debugLog(`No translation found for: "${cleanText}"`);
+                }
+            })
+            .catch(error => {
+                debugLog(`API Error: ${error}`);
+                // Even if API fails, show the speech text
+                displayTranslationResult(cleanText, null, false);
+                updateStatus("API Error - showing speech text", true);
+                updateStatusIndicators("success", "error");
+            });
+        }
+    };
+    
+    recognition.onerror = (event) => {
+        debugLog(`Recognition error: ${event.error}`);
+        if (event.error === 'not-allowed') {
+            updateStatus("Microphone access blocked. Check browser permissions.", true);
+        } else {
+            updateStatus(`Error: ${event.error}`, true);
+        }
+        updateButtonStates(false, true);
+        updateStatusIndicators("error", "error");
+    };
+    
+    recognition.onend = () => {
+        isListening = false;
+        debugLog("Speech recognition stopped");
+        updateStatus("Stopped");
+        updateButtonStates(false, true);
+        updateStatusIndicators("waiting", "ready");
+        updateTranslationMeta("System stopped");
+    };
+    
+    try {
+        recognition.start();
+        return true;
+    } catch (error) {
+        debugLog(`Failed to start recognition: ${error}`);
+        return false;
+    }
+}
+
+// Stop everything
+function stopEverything() {
+    // Stop speech recognition
+    if (recognition) {
+        recognition.stop();
+        isListening = false;
+    }
+    
+    // Stop video stream
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => track.stop());
+        currentStream = null;
+        debugLog("Camera stopped");
+    }
+    
+    // Show placeholder
+    video.style.display = 'none';
+    videoPlaceholder.style.display = 'flex';
+    
+    updateButtonStates(false, true);
+    updateStatus("Stopped");
+    updateStatusIndicators("waiting", "ready");
+    updateTranslationMeta("System stopped - click Start to begin");
+}
+
+// Start everything
+async function startEverything() {
+    try {
+        debugLog("Starting translation system...");
+        updateStatus("Initializing...");
+        updateButtonStates(true, true);
+        
+        // Start video first
+        const videoStarted = await startVideo();
+        if (!videoStarted) {
+            updateButtonStates(false, true);
+            return;
+        }
+        
+        // Then start speech recognition
+        const recognitionStarted = await startRecognition();
+        if (!recognitionStarted) {
+            stopEverything();
+            return;
+        }
+        
+        debugLog("System started successfully");
+        
+    } catch (error) {
+        debugLog(`Startup error: ${error}`);
+        updateStatus(`Startup failed: ${error.message}`, true);
+        stopEverything();
+    }
+}
+
+// Test API directly (without microphone)
+document.getElementById('test-btn').onclick = async () => {
+    const testPhrases = ["hello", "good morning", "thank you", "how are you"];
+    const randomPhrase = testPhrases[Math.floor(Math.random() * testPhrases.length)];
+    
+    debugLog(`Testing API with: "${randomPhrase}"`);
+    updateStatus(`Testing with: "${randomPhrase}"`);
+    updateStatusIndicators("testing", "testing");
+    
+    try {
+        const response = await fetch("/api/live-translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                text: randomPhrase,
+                language: document.getElementById("language").value
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        debugLog(`Test Response: ${JSON.stringify(data)}`);
+        
+        if (data.translation) {
+            displayTranslationResult(randomPhrase, data.translation, true);
+            updateStatus(`API Test: Found in database!`);
+            debugLog(`Database working! Matched: "${data.matched_phrase}"`);
+        } else {
+            displayTranslationResult(randomPhrase, null, false);
+            updateStatus("API Test: No translation found - showing speech text");
+            debugLog(`Database missing: "${randomPhrase}"`);
+        }
+    } catch (error) {
+        debugLog(`Test Error: ${error}`);
+        displayTranslationResult(randomPhrase, null, false);
+        updateStatus("API Test Failed - showing speech text", true);
+        updateStatusIndicators("success", "error");
+    }
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    loadCameras();
+    updateButtonStates(false, true);
+    updateStatusIndicators("waiting", "ready");
+    updateTranslationMeta("When no translation is found, speech text will be shown");
+    
+    // Button events
+    document.getElementById('start-btn').onclick = startEverything;
+    document.getElementById('stop-btn').onclick = stopEverything;
+    
+    debugLog("System initialized. Click 'Start Translation' to begin.");
+});
+</script>
+{% endblock %}

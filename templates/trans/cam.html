@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Webcam Test</title>
+</head>
+<body>
+    <h2>Webcam Test</h2>
+    <video id="video" autoplay playsinline width="640" height="480"></video>
+
+    <script>
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                document.getElementById('video').srcObject = stream;
+            })
+            .catch(err => {
+                alert("Error accessing webcam: " + err.message);
+                console.error(err);
+            });
+    </script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligence Threat Monitoring</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-dark: #0a192f;    
+            --primary-medium: #172a45;    
+            --primary-light: #303f60;     
+            --accent-color: #64ffda;      
+            --text-primary: #ccd6f6;     
+            --text-secondary: #8892b0;
+            --alert-color: #ff6b6b;
+        }
+
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
+            overflow-x: hidden;
+            background: var(--primary-dark);
+            color: var(--text-primary);
+        }
+
+        .background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(125deg, #0a192f 0%, #162744 35%, #1c2f4f 100%);
+            z-index: -2;
+        }
+
+        .grid-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(18, 40, 70, 0.7) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(18, 40, 70, 0.7) 1px, transparent 1px);
+            background-size: 20px 20px;
+            z-index: -1;
+            opacity: 0.4;
+        }
+
+        .radar-sweep {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80vmin;
+            height: 80vmin;
+            border-radius: 50%;
+            border: 2px solid rgba(100, 255, 218, 0.1);
+            z-index: -1;
+            overflow: hidden;
+        }
+
+        .radar-sweep::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, transparent 40%, rgba(100, 255, 218, 0.2) 50%, transparent 60%);
+            animation: radarRotation 8s linear infinite;
+        }
+
+        @keyframes radarRotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .security-card {
+            background: rgba(10, 25, 47, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            border: 1px solid rgba(100, 255, 218, 0.15);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s ease;
+        }
+
+        .security-card:hover {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            border-color: rgba(100, 255, 218, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .intelli-logo {
+            font-weight: 800;
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #64ffda 0%, #ccd6f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(100, 255, 218, 0.3);
+            letter-spacing: 1px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .intelli-logo::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #64ffda, transparent);
+            border-radius: 2px;
+        }
+
+        .threat-indicator {
+            position: relative;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid var(--alert-color);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .threat-indicator::before {
+            content: 'LIVE';
+            position: absolute;
+            top: -8px;
+            right: 10px;
+            background: var(--alert-color);
+            color: #fff;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover .feature-icon {
+            transform: scale(1.1);
+            color: #fff;
+        }
+
+        .btn-security {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1.5px solid var(--accent-color);
+            color: var(--accent-color);
+            border-radius: 6px;
+            padding: 0.8rem 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-security:hover {
+            background: rgba(100, 255, 218, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+            color: #fff;
+        }
+
+        .btn-outline-security {
+            background: transparent;
+            border: 1.5px solid var(--text-secondary);
+            color: var(--text-primary);
+            border-radius: 6px;
+            padding: 0.8rem 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            width: 100%;
+            text-align: center;
+            text-decoration: none;
+            display: block;
+        }
+
+        .btn-outline-security:hover {
+            background: rgba(136, 146, 176, 0.1);
+            border-color: var(--text-primary);
+            color: var(--text-primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(136, 146, 176, 0.2);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            margin-right: 8px;
+            box-shadow: 0 0 8px var(--accent-color);
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .floating {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes textFade {
+            0% { opacity: 0; transform: translateY(10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .text-animation {
+            animation: textFade 6s infinite;
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .intelli-logo {
+                font-size: 2.5rem;
+            }
+            
+            .security-card {
+                border-radius: 10px;
+            }
+            
+            .feature-icon {
+                font-size: 1.8rem;
+            }
+            
+            .btn-security, .btn-outline-security {
+                padding: 0.7rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            
+            .radar-sweep {
+                width: 100vmin;
+                height: 100vmin;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="background-container"></div>
+    <div class="grid-overlay"></div>
+    <div class="radar-sweep"></div>
+    
+    <div class="container py-4">
+        <!-- Header -->
+        <header class="d-flex justify-content-between align-items-center py-3 mb-4">
+            <div class="d-flex align-items-center">
+                <i class="bi bi-shield-shaded text-teal-400 me-2" style="font-size: 2rem;"></i>
+                <h1 class="intelli-logo m-0">inTelli</h1>
+            </div>
+            <div class="d-none d-md-block">
+                <span class="badge bg-teal-900 text-teal-300 px-3 py-2 rounded-pill">
+                    <span class="status-dot"></span>System Active
+                </span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="security-card p-4 p-md-5 mb-5">
+                    <div class="text-center mb-5">
+                              
+                    </div>
+                    
+                    <div class="row align-items-center">
+                        
+                        <div class="col-md-7 mb-4 mb-md-0">
+                            <div class="pe-md-3">
+                                <div class="mb-4 position-relative" style="height: 100px;">
+                                    <div id="dynamicMessage" class="message-text text-white fs-5 text-animation text-center" style="line-height: 1.6;"></div>
+                                </div>
+                                
+                                <div class="row g-4">
+                                    <div class="col-6">
+                                        <div class="feature-item text-center">
+                                            <i class="bi bi-activity feature-icon"></i>
+                                            <h6 class="text-white">Behavior Analysis</h6>
+                                            <p class="text-secondary mb-0 small">Detect anomalous user activities</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="feature-item text-center">
+                                            <i class="bi bi-diagram-3 feature-icon"></i>
+                                            <h6 class="text-white">Pattern Recognition</h6>
+                                            <p class="text-secondary mb-0 small">Identify emerging threat patterns</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="feature-item text-center">
+                                            <i class="bi bi-shield-lock feature-icon"></i>
+                                            <h6 class="text-white">Access Control</h6>
+                                            <p class="text-secondary mb-0 small">Manage security permissions</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="feature-item text-center">
+                                            <i class="bi bi-graph-up-arrow feature-icon"></i>
+                                            <h6 class="text-white">Risk Assessment</h6>
+                                            <p class="text-secondary mb-0 small">Evaluate threat levels</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Right Column - Login Options -->
+                        <div class="col-md-5">
+                            <div class="ps-md-3">
+                                <div class="security-card p-4 floating">
+                                    <h5 class="text-white text-center mb-4"> Access Portal</h5>
+                                    
+                                    <div class="d-grid gap-3">
+                                        <a href="{{ url_for('auth.login') }}" class="btn-security">
+                                            <i class="bi bi-key-fill me-2"></i> Login
+                                        </a>
+                                        <a href="{{ url_for('auth.register') }}" class="btn-outline-security">
+                                            <i class="bi bi-person-badge me-2"></i> Registration
+                                        </a>
+                                    </div>
+                                    
+                                    <div class="text-center mt-4 pt-3 border-top border-secondary">
+                                        <a href="tel:+26388221301" class="text-teal-300 text-decoration-none small">
+                                            <i class="bi bi-telephone-fill me-1"></i>Emergency: (+263) 77 153 7650
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                </div>
+            </div>
+        </main>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const messages = [
+            'Monitoring user behavior patterns for potential threats.',
+            'Analyzing network activities for anomalous behavior.',
+            'Tracking digital footprint across multiple platforms.',
+            'Identifying suspicious pattern deviations in real-time.',
+            'Correlating data points for comprehensive threat assessment.'
+        ];
+        
+        let currentIndex = 0;
+        const messageElement = document.getElementById('dynamicMessage');
+
+        function changeMessage() {
+            // Fade out
+            messageElement.style.opacity = 0;
+            messageElement.style.transform = 'translateY(-10px)';
+            
+            setTimeout(() => {
+                // Change content
+                currentIndex = (currentIndex + 1) % messages.length;
+                messageElement.textContent = messages[currentIndex];
+                
+                // Fade in
+                messageElement.style.opacity = 1;
+                messageElement.style.transform = 'translateY(0)';
+            }, 500);
+        }
+
+        messageElement.textContent = messages[0];
+        
+        
+        setTimeout(() => {
+            changeMessage();
+            setInterval(changeMessage, 5000);
+        }, 5000);
+    </script>
+</body>
+</html>

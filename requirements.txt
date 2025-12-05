@@ -1,0 +1,59 @@
+# --- Web Frameworks ---
+flask
+flask-login
+flask-sqlalchemy
+flask-wtf
+flask-cors
+flask-restful
+
+# --- Data Handling & Analysis ---
+pandas
+numpy
+scipy
+openpyxl
+xlrd
+requests
+beautifulsoup4
+lxml
+
+# --- Machine Learning & Statistics ---
+scikit-learn
+joblib
+threadpoolctl
+xgboost
+lightgbm
+statsmodels
+
+# --- Visualization ---
+matplotlib
+seaborn
+plotly
+folium
+dash
+
+# --- Database & ORM ---
+mysql-connector-python
+psycopg2-binary
+pyodbc
+sqlalchemy
+
+# --- Security & Encryption ---
+bcrypt
+passlib
+cryptography
+
+# --- NLP & Text Processing ---
+googletrans==4.0.0-rc1
+nltk
+textblob
+transformers
+sentencepiece
+
+# --- Utility Libraries ---
+tqdm
+colorama
+python-dotenv
+schedule
+pyyaml
+validators
+pyjwt

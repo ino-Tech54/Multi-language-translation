@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoTranslate Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --primary-light: #3b82f6;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --text-dark: #1e293b;
+            --text-light: #64748b;
+            --text-white: #f8fafc;
+            --bg-light: #f1f5f9;
+            --bg-white: #ffffff;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            color: var(--text-dark);
+            background-color: var(--bg-light);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--text-white);
+            padding: 0 24px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 70px;
+            box-shadow: var(--shadow);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-welcome {
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius);
+        }
+
+        .user-welcome i {
+            color: var(--accent);
+        }
+
+        .toggle-sidebar {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-white);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: var(--radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .toggle-sidebar:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .top-nav {
+            display: flex;
+            gap: 8px;
+        }
+
+        .top-nav-item {
+            color: var(--text-white);
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            white-space: nowrap;
+        }
+
+        .top-nav-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .top-nav-item.active {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .top-nav-item i {
+            font-size: 16px;
+        }
+
+        /* Sidebar Styles */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 998;
+            display: none;
+            backdrop-filter: blur(3px);
+        }
+
+        .sidebar {
+            width: 260px;
+            background: var(--bg-white);
+            padding: 24px 0;
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+            top: 0;
+            left: 0;
+            z-index: 999;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.1);
+            border-right: 1px solid var(--border);
+        }
+
+        .sidebar.active {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 24px 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 16px;
+        }
+
+        .sidebar-header h3 {
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header h3 i {
+            color: var(--primary);
+        }
+
+        .close-sidebar {
+            background: rgba(59, 130, 246, 0.1);
+            border: none;
+            font-size: 18px;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: var(--transition);
+        }
+
+        .close-sidebar:hover {
+            background: rgba(59, 130, 246, 0.2);
+        }
+
+        .sidebar-item {
+            padding: 14px 24px;
+            cursor: pointer;
+            margin: 6px 16px;
+            font-size: 16px;
+            font-weight: 500;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            color: var(--text-dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .sidebar-item:before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--primary);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-item:hover {
+            background-color: rgba(59, 130, 246, 0.05);
+            transform: translateX(4px);
+        }
+
+        .sidebar-item:hover:before {
+            transform: scaleY(1);
+        }
+
+        .sidebar-item.active {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .sidebar-item.active:before {
+            transform: scaleY(1);
+            background: white;
+        }
+
+        .sidebar-item i {
+            margin-right: 14px;
+            font-size: 18px;
+            width: 24px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-item:hover i {
+            transform: scale(1.1);
+        }
+
+        .sidebar-footer {
+            margin-top: auto;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .logout-sidebar {
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: var(--radius);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            color: var(--text-dark);
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .logout-sidebar:hover {
+            background: rgba(239, 68, 68, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+        }
+
+        .logout-sidebar i {
+            margin-right: 12px;
+            font-size: 16px;
+            color: var(--error);
+        }
+
+        /* Main Content */
+        .container {
+            padding-top: 70px;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        /* Flash Messages */
+        .message {
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow);
+            animation: slideIn 0.5s ease;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid var(--success);
+            color: var(--text-dark);
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid var(--error);
+            color: #991b1b;
+        }
+
+        .message button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: inherit;
+            opacity: 0.7;
+            transition: opacity 0.3s ease;
+        }
+
+        .message button:hover {
+            opacity: 1;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Logout Overlay */
+        .logout-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .logout-content {
+            background: white;
+            padding: 30px;
+            border-radius: var(--radius);
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(59, 130, 246, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .logout-message {
+            color: var(--text-dark);
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        /* Mobile Responsiveness */
+        @media (min-width: 769px) {
+            .sidebar {
+                transform: translateX(0);
+                width: 260px;
+            }
+            
+            .main-content {
+                margin-left: 260px;
+            }
+            
+            .sidebar-overlay {
+                display: none !important;
+            }
+            
+            .close-sidebar {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            header {
+                padding: 0 16px;
+                height: 60px;
+            }
+            
+            .logo {
+                font-size: 18px;
+            }
+            
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .user-welcome {
+                font-size: 14px;
+                padding: 6px 12px;
+            }
+            
+            .top-nav-item {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            
+            .main-content {
+                padding: 20px;
+            }
+            
+            .sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .top-nav {
+                gap: 4px;
+            }
+            
+            .top-nav-item {
+                padding: 8px;
+                font-size: 0;
+            }
+            
+            .top-nav-item i {
+                font-size: 16px;
+                margin: 0;
+            }
+            
+            .user-welcome span {
+                display: none;
+            }
+            
+            .main-content {
+                padding: 16px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            header {
+                padding: 0 12px;
+            }
+            
+            .header-right {
+                gap: 8px;
+            }
+            
+            .logo span {
+                display: none;
+            }
+            
+            .sidebar {
+                width: 220px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="logout-overlay" id="logoutOverlay">
+        <div class="logout-content">
+            <div class="spinner"></div>
+            <div class="logout-message">Logging out, please wait...</div>
+        </div>
+    </div>
+
+    <header>
+        <div class="header-left">
+            <button class="toggle-sidebar" id="toggleSidebar">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-closed-captioning"></i>
+                </div>
+                <span>VideoTranslate</span>
+            </div>
+        </div>
+
+        <div class="header-right">
+            <div class="user-welcome">
+                <i class="fas fa-user"></i>
+                <span>{{ current_user.name }}</span>
+            </div>
+            
+            <div class="top-nav">
+                <div class="top-nav-item {% if request.endpoint == '#' %}active{% endif %}" 
+                  
+                    <i class="fas fa-language"></i> 
+                    <!--span class="nav-text">Language</span-->
+                </div>
+
+                <div class="top-nav-item" onclick="showLogoutSpinner()">
+                    <i class="fas fa-sign-out-alt"></i> 
+                    <span class="nav-text">Logout</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3><i class="fas fa-closed-captioning"></i> Navigation</h3>
+            <button class="close-sidebar" id="closeSidebar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="sidebar-item {% if request.endpoint == 'trans.home' %}active{% endif %}" 
+             onclick="location.href='{{ url_for('trans.home') }}'">
+            <i class="fas fa-home"></i> Dashboard
+        </div>
+
+        <div class="sidebar-item {% if request.endpoint == 'trans.video_translation' %}active{% endif %}" 
+             onclick="location.href='{{ url_for('trans.video_translation') }}'">
+            <i class="fas fa-video"></i> Video Translation
+        </div>
+
+        <div class="sidebar-item {% if request.endpoint == 'trans.recorded_translation' %}active{% endif %}" 
+             onclick="location.href='{{ url_for('trans.recorded_translation') }}'">
+            <i class="fas fa-film"></i> Pre-records
+        </div>
+
+        <div class="sidebar-item {% if request.endpoint == 'trans.reports' %}active{% endif %}" 
+             onclick="location.href='{{ url_for('trans.reports') }}'">
+            <i class="fas fa-chart-bar"></i> Reports
+        </div>
+
+    </nav>
+
+    <div class="container">
+        <main class="main-content" id="mainContent">
+            <!-- Flash messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="message {% if category == 'error' %}error{% else %}success{% endif %}">
+                            <div>
+                                <i class="fas {% if category == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                                {{ message }}
+                            </div>
+                            <button type="button" onclick="this.parentElement.style.display='none'">
+                                &times;
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <script>
+        function showLogoutSpinner() {
+            const overlay = document.getElementById('logoutOverlay');
+            overlay.style.display = 'flex';
+
+            setTimeout(() => {
+                window.location.href = '{{ url_for("auth.logout") }}';
+            }, 1500);
+        }
+
+        // Sidebar functionality
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        const toggleSidebarBtn = document.getElementById('toggleSidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
+
+        function openSidebar() {
+            sidebar.classList.add('active');
+            sidebarOverlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('active');
+            sidebarOverlay.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        toggleSidebarBtn.addEventListener('click', openSidebar);
+        closeSidebarBtn.addEventListener('click', closeSidebar);
+        sidebarOverlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            if (window.innerWidth < 769 && 
+                sidebar.classList.contains('active') && 
+                !sidebar.contains(event.target) && 
+                !toggleSidebarBtn.contains(event.target)) {
+                closeSidebar();
+            }
+        });
+
+        // Set active page based on current URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const sidebarItems = document.querySelectorAll('.sidebar-item');
+            const topNavItems = document.querySelectorAll('.top-nav-item');
+            
+            sidebarItems.forEach(item => {
+                const link = item.getAttribute('onclick');
+                if (link && link.includes(currentPath)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            topNavItems.forEach(item => {
+                const link = item.getAttribute('onclick');
+                if (link && link.includes(currentPath)) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Auto-hide flash messages after 5 seconds
+            setTimeout(() => {
+                const messages = document.querySelectorAll('.message');
+                messages.forEach(message => {
+                    message.style.opacity = '0';
+                    setTimeout(() => {
+                        message.style.display = 'none';
+                    }, 500);
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>
